@@ -1,0 +1,68 @@
+#!/bin/sh
+
+CONF_FILENAME=intel-undervolt
+CONF_PATH=/etc/${CONF_FILENAME}.conf
+
+dump_config() {
+  echo "BEGIN ----- Dumping current configuration -----"
+  cat $CONF_PATH
+  echo "END ----- Dumping current configuration -----"
+}
+
+if [ -z "$1" ]; then
+  cat <<HelpMessage
+Usage:
+select-perf power   : Power performance  (UV: -135, Power: 45/45, Temp: 100 C)
+select-perf normal  : Normal performance (UV: 0   , Power: 45/45, Temp: 100 C)
+select-perf battery : Battery saver      (UV: -135, Power: 25/15, Temp: 55  C)
+HelpMessage
+
+  echo
+
+  dump_config
+
+  exit 1
+fi
+
+use_power() {
+  echo "Using Power performance profile..."
+  sudo cp $HOME/shell-scripts/${CONF_FILENAME}-power.conf $CONF_PATH
+}
+
+use_normal() {
+  echo "Using Normal performance profile..."
+  sudo cp $HOME/shell-scripts/${CONF_FILENAME}-normal.conf $CONF_PATH
+}
+
+use_battery() {
+  echo "Using Battery saver profile..."
+  sudo cp $HOME/shell-scripts/${CONF_FILENAME}-battery.conf $CONF_PATH
+}
+
+
+case $1 in
+  power)
+    use_power
+    break
+    ;;
+
+  normal)
+    use_normal
+    break
+    ;;
+
+  battery)
+    use_battery
+    break
+    ;;
+
+  *)
+    echo "Invalid value: $1"
+    exit 1
+esac
+
+echo Updated configuration. Dumping it...
+dump_config
+
+echo Now applying the configuration...
+sudo intel-undervolt apply
